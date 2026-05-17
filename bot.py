@@ -1,38 +1,35 @@
 import os
-import asyncio
-from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+import logging
+from telegram.ext import Application, CommandHandler
 from dotenv import load_dotenv
 
+# 1. Load environment variables
 load_dotenv()
+TOKEN = os.getenv("TOKEN")
 
-TOKEN = os.getenv("BOT_TOKEN")
+# Enable logging
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
-
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("🤖 Bot is working!")
-
-
-async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(update.message.text)
-
+async def start(update, context):
+    await update.message.reply_text("🚀 Ra Jahn Bot is Active!")
 
 def main():
+    # Check if TOKEN exists to avoid the crash you saw
     if not TOKEN:
-        print("❌ BOT_TOKEN missing")
+        print("❌ ERROR: No TOKEN found in Environment Variables!")
         return
 
     print("🚀 BOT STARTING...")
-
+    
+    # Create the app
     app = Application.builder().token(TOKEN).build()
 
+    # Add handlers
     app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
 
-    print("✅ BOT RUNNING SUCCESSFULLY")
-
+    # Start the Bot
+    print("✅ Bot is running...")
     app.run_polling()
-
 
 if __name__ == "__main__":
     main()
