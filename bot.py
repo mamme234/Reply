@@ -1,5 +1,4 @@
 import os
-import time
 import requests
 from dotenv import load_dotenv
 
@@ -18,13 +17,12 @@ load_dotenv()
 TOKEN = os.getenv("BOT_TOKEN")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-OWNER_ID = 7154361039
 CHANNEL = "@KING_OF_CRY"
 
-msg_count = 0
 mode = "ai"
+msg_count = 0
 
-# ───────── AI FUNCTION ─────────
+
 def ai_reply(text):
     try:
         r = requests.post(
@@ -42,67 +40,60 @@ def ai_reply(text):
             },
             timeout=20
         )
-
         return r.json()["choices"][0]["message"]["content"]
+    except:
+        return "AI error"
 
-    except Exception as e:
-        return "⚡ AI error"
 
-# ───────── START ─────────
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [
-            InlineKeyboardButton("🤖 AI MODE", callback_data="ai"),
-            InlineKeyboardButton("💼 LUXURY", callback_data="luxury")
+            InlineKeyboardButton("AI", callback_data="ai"),
+            InlineKeyboardButton("LUX", callback_data="lux")
         ],
-        [InlineKeyboardButton("📊 STATS", callback_data="stats")]
+        [InlineKeyboardButton("STATS", callback_data="stats")]
     ]
 
     await update.message.reply_text(
-        "👑 Bot Panel Ready",
+        "Bot ready",
         reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
-# ───────── BUTTONS ─────────
+
 async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global mode
+    q = update.callback_query
+    await q.answer()
 
-    query = update.callback_query
-    await query.answer()
-
-    if query.data == "ai":
+    if q.data == "ai":
         mode = "ai"
-        await query.edit_message_text("🤖 AI mode ON")
+        await q.edit_message_text("AI ON")
 
-    elif query.data == "luxury":
-        mode = "luxury"
-        await query.edit_message_text("💼 Luxury mode ON")
+    elif q.data == "lux":
+        mode = "lux"
+        await q.edit_message_text("LUX ON")
 
-    elif query.data == "stats":
-        await query.edit_message_text(f"📊 Active messages bot received")
+    elif q.data == "stats":
+        await q.edit_message_text(f"Messages: {msg_count}")
 
-# ───────── MESSAGE HANDLER ─────────
+
 async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    global msg_count, mode
-
+    global msg_count
     msg_count += 1
+
     text = update.message.text
 
-    # forward to channel
     try:
-        await context.bot.send_message(chat_id=CHANNEL, text=f"📩 {text}")
+        await context.bot.send_message(chat_id=CHANNEL, text=text)
     except:
         pass
 
     if mode == "ai":
-        reply = ai_reply(text)
-        await update.message.reply_text(reply)
+        await update.message.reply_text(ai_reply(text))
     else:
-        await update.message.reply_text(
-            "👑 Luxury mode active.\nContact admin for access."
-        )
+        await update.message.reply_text("Luxury mode active")
 
-# ───────── MAIN ─────────
+
 def main():
     print("🚀 BOT STARTING...")
 
@@ -112,8 +103,9 @@ def main():
     app.add_handler(CallbackQueryHandler(buttons))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle))
 
-    print("🚀 BOT RUNNING...")
+    print("BOT RUNNING")
     app.run_polling()
+
 
 if __name__ == "__main__":
     main()
