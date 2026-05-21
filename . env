@@ -1,1 +1,3 @@
 BOT_TOKEN=8344006616:AAHbMUpesgkOJQaFFAgNyIdeeVwKzCe2wmw
+WEBHOOK_URL=https://crypto-1-83dg.onrender.com
+PORT=10000
