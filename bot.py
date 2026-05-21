@@ -1,5 +1,4 @@
 import os
-import asyncio
 from dotenv import load_dotenv
 
 from telegram import Update
@@ -12,7 +11,6 @@ from telegram.ext import (
 )
 
 load_dotenv()
-
 TOKEN = os.getenv("BOT_TOKEN")
 
 
@@ -27,7 +25,7 @@ async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"📩 {update.message.text}")
 
 
-async def run_bot():
+def main():
     if not TOKEN:
         print("❌ BOT_TOKEN missing")
         return
@@ -41,8 +39,8 @@ async def run_bot():
 
     print("✅ BOT ONLINE")
 
-    await app.run_polling()
+    app.run_polling()   # ✅ NO await, NO asyncio.run
 
 
 if __name__ == "__main__":
-    asyncio.run(run_bot())
+    main()
