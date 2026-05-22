@@ -2,7 +2,7 @@ import os
 import asyncio
 import threading
 from flask import Flask
-from telegram import Update, ReplyKeyboardMarkup
+from telegram import Update
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -18,9 +18,6 @@ TOKEN = os.getenv("BOT_TOKEN")
 # Your Telegram ID
 ADMIN_ID = 7154361039
 
-# Save user languages
-user_languages = {}
-
 # ================= FLASK =================
 
 app = Flask(__name__)
@@ -33,87 +30,35 @@ def run_web():
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
 
-# ================= LANGUAGES =================
-
-texts = {
-
-    "eng": {
-        "selected": "Language set to English 🇬🇧",
-
-        "offline": """
-✨ Hello {name},
-
-Thank you for your message 🤍
-
-I'm currently offline and out for personal business, so replies may be delayed.
-
-📞 If your message is urgent, please call:
-+251934600018
-
-⏳ I’ll respond as soon as I'm available.
-
-Thank you for your patience 🌹
-"""
-    },
-
-    "amh": {
-        "selected": "ቋንቋው ወደ አማርኛ ተቀይሯል 🇪🇹",
-
-        "offline": """
-✨ ሰላም {name},
-
-መልእክትዎን ስላደረሱ እናመሰግናለን 🤍
-
-አሁን በግል ስራ ላይ ስለሆንኩ ከመስመር ውጭ ነኝ፣ ስለዚህ ምላሽ ሊዘገይ ይችላል።
-
-📞 አስቸኳይ ከሆነ ይደውሉ:
-+251934600018
-
-⏳ በተቻለ ፍጥነት እመልሳለሁ።
-
-ለትዕግስትዎ እናመሰግናለን 🌹
-"""
-    },
-
-    "oro": {
-        "selected": "Afaan Oromoo filatameera 🌍",
-
-        "offline": """
-✨ Akkam {name},
-
-Ergaa keessaniif galatoomaa 🤍
-
-Amma hojii dhuunfaa irratti waanan jiruuf online miti, deebiin isaanii yeroo fudhachuu danda’a.
-
-📞 Yoo dhimichi ariifachiisaa ta’e bilbilaa:
-+251934600018
-
-⏳ Yeroon argadhetti deebii isiniif nan kenna.
-
-Galatoomaa 🌹
-"""
-    }
-}
-
 # ================= START =================
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
-    keyboard = [
-        ["English 🇬🇧"],
-        ["አማርኛ 🇪🇹"],
-        ["Afaan Oromo 🌍"]
-    ]
+    welcome_message = f"""
+✨ Welcome {update.effective_user.first_name} ✨
 
-    reply_markup = ReplyKeyboardMarkup(
-        keyboard,
-        resize_keyboard=True
-    )
+This is my personal assistant bot 🤍
 
-    await update.message.reply_text(
-        "Choose language / ቋንቋ ይምረጡ / Afaan filadhaa 👇",
-        reply_markup=reply_markup
-    )
+Send any message and I will receive it directly.
+
+━━━━━━━━━━━━━━━
+
+✨ እንኳን ደህና መጡ ✨
+
+ይህ የግል ረዳት ቦት ነው 🤍
+
+ማንኛውንም መልእክት ይላኩ እኔ በቀጥታ እቀበላለሁ።
+
+━━━━━━━━━━━━━━━
+
+✨ Baga nagaan dhuftan ✨
+
+Kun bot gargaaraa koo dhuunfaa dha 🤍
+
+Ergaa kamiyyuu ergaa, ani kallattiin nan argadha.
+"""
+
+    await update.message.reply_text(welcome_message)
 
 # ================= HANDLE MESSAGE =================
 
@@ -122,43 +67,48 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     text = update.message.text
 
-    # ================= LANGUAGE SELECTION =================
-
-    if text == "English 🇬🇧":
-        user_languages[user.id] = "eng"
-
-        await update.message.reply_text(
-            texts["eng"]["selected"]
-        )
-        return
-
-    elif text == "አማርኛ 🇪🇹":
-        user_languages[user.id] = "amh"
-
-        await update.message.reply_text(
-            texts["amh"]["selected"]
-        )
-        return
-
-    elif text == "Afaan Oromo 🌍":
-        user_languages[user.id] = "oro"
-
-        await update.message.reply_text(
-            texts["oro"]["selected"]
-        )
-        return
-
-    # ================= GET USER LANGUAGE =================
-
-    lang = user_languages.get(user.id, "eng")
-
     # ================= AUTO REPLY =================
 
-    reply = texts[lang]["offline"].format(
-        name=user.first_name
-    )
+    luxury_reply = f"""
+✨ Hello {user.first_name},
 
-    await update.message.reply_text(reply)
+Thank you for your message 🤍
+I'm currently offline and out for personal business, so replies may be delayed.
+
+📞 If urgent call:
++251934600018
+
+⏳ I’ll respond as soon as possible.
+
+━━━━━━━━━━━━━━━
+
+✨ ሰላም {user.first_name},
+
+መልእክትዎን ስላደረሱ እናመሰግናለን 🤍
+አሁን በግል ስራ ላይ ስለሆንኩ ከመስመር ውጭ ነኝ።
+
+📞 አስቸኳይ ከሆነ ይደውሉ:
++251934600018
+
+⏳ በተቻለ ፍጥነት እመልሳለሁ።
+
+━━━━━━━━━━━━━━━
+
+✨ Akkam {user.first_name},
+
+Ergaa keessaniif galatoomaa 🤍
+Amma hojii dhuunfaa irratti waanan jiruuf online miti.
+
+📞 Yoo ariifachiisaa ta’e bilbilaa:
++251934600018
+
+⏳ Yeroon argadhetti deebii nan kenna.
+
+🌹 Galatoomaa
+"""
+
+    # Reply to user
+    await update.message.reply_text(luxury_reply)
 
     # ================= SEND TO ADMIN =================
 
@@ -167,7 +117,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 👤 Name: {user.first_name}
 🆔 User ID: {user.id}
-🌍 Language: {lang}
+📨 Username: @{user.username}
+
+━━━━━━━━━━━━━━━
 
 📨 Message:
 {text}
