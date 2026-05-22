@@ -1,4 +1,5 @@
 import os
+import asyncio
 import threading
 from flask import Flask
 from telegram import Update
@@ -32,19 +33,26 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(update.message.text)
 
-def run_bot():
-    application = Application.builder().token(TOKEN).build()
+async def main():
+    app_bot = Application.builder().token(TOKEN).build()
 
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
+    app_bot.add_handler(CommandHandler("start", start))
+    app_bot.add_handler(
+        MessageHandler(filters.TEXT & ~filters.COMMAND, echo)
+    )
 
     print("Bot started...")
-    application.run_polling()
+    
+    await app_bot.initialize()
+    await app_bot.start()
+    await app_bot.updater.start_polling()
+
+    while True:
+        await asyncio.sleep(100)
 
 # ================= MAIN =================
 
 if __name__ == "__main__":
-    t = threading.Thread(target=run_web)
-    t.start()
+    threading.Thread(target=run_web).start()
 
-    run_bot()
+    asyncio.run(main())
