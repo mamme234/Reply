@@ -15,7 +15,7 @@ from telegram.ext import (
 
 TOKEN = os.getenv("BOT_TOKEN")
 
-# Your Telegram ID
+# Your personal Telegram ID
 ADMIN_ID = 7154361039
 
 # ================= FLASK =================
@@ -35,93 +35,99 @@ def run_web():
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     welcome_message = f"""
-✨ Welcome {update.effective_user.first_name} ✨
+✨ Welcome ꧁ɪ ᴀᴍ Tᕼᗴ KIᑎᘜ꧂ ✨
 
-This is my personal assistant bot 🤍
+Thank you for messaging me 🤍
 
-Send any message and I will receive it directly.
+Send your message or problem here.
 
 ━━━━━━━━━━━━━━━
 
 ✨ እንኳን ደህና መጡ ✨
 
-ይህ የግል ረዳት ቦት ነው 🤍
+መልእክትዎን ስላደረሱልኝ እናመሰግናለን 🤍
 
-ማንኛውንም መልእክት ይላኩ እኔ በቀጥታ እቀበላለሁ።
+ችግርዎን ወይም መልእክትዎን ይላኩ።
 
 ━━━━━━━━━━━━━━━
 
 ✨ Baga nagaan dhuftan ✨
 
-Kun bot gargaaraa koo dhuunfaa dha 🤍
+Ergaa keessaniif galatoomaa 🤍
 
-Ergaa kamiyyuu ergaa, ani kallattiin nan argadha.
+Rakkoo keessan as irratti naaf ergaa.
 """
 
     await update.message.reply_text(welcome_message)
 
-# ================= HANDLE MESSAGE =================
+# ================= MESSAGE HANDLER =================
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user = update.effective_user
     text = update.message.text
 
-    # ================= AUTO REPLY =================
+    # ================= LUXURY PERSONAL REPLY =================
 
     luxury_reply = f"""
-✨ Hello {user.first_name},
+✨ Welcome ꧁ɪ ᴀᴍ Tᕼᗴ KIᑎᘜ꧂ ✨
 
 Thank you for your message 🤍
-I'm currently offline and out for personal business, so replies may be delayed.
 
-📞 If urgent call:
+I’m currently offline and out for personal business right now.
+
+If you need support, send your problem clearly and I’ll check it once I’m available.
+
+📞 For urgent matters:
 +251934600018
 
-⏳ I’ll respond as soon as possible.
+⏳ Please be patient, I’ll reply as soon as possible.
 
 ━━━━━━━━━━━━━━━
 
-✨ ሰላም {user.first_name},
+✨ እንኳን ደህና መጡ ✨
 
-መልእክትዎን ስላደረሱ እናመሰግናለን 🤍
+መልእክትዎን ስላደረሱልኝ እናመሰግናለን 🤍
+
 አሁን በግል ስራ ላይ ስለሆንኩ ከመስመር ውጭ ነኝ።
 
-📞 አስቸኳይ ከሆነ ይደውሉ:
+ችግርዎን በግልፅ ይላኩልኝ፣ ሲመቸኝ እመለከተዋለሁ።
+
+📞 አስቸኳይ ከሆነ:
 +251934600018
 
-⏳ በተቻለ ፍጥነት እመልሳለሁ።
+⏳ እባክዎ ትዕግስት ያድርጉ።
 
 ━━━━━━━━━━━━━━━
 
-✨ Akkam {user.first_name},
+✨ Baga nagaan dhuftan ✨
 
-Ergaa keessaniif galatoomaa 🤍
+Ergaa naaf ergitaniif galatoomaa 🤍
+
 Amma hojii dhuunfaa irratti waanan jiruuf online miti.
 
-📞 Yoo ariifachiisaa ta’e bilbilaa:
+Rakkoo keessan ifatti naaf barreessaa, yeroo argadhetti nan ilaala.
+
+📞 Yoo ariifachiisaa ta’e:
 +251934600018
 
-⏳ Yeroon argadhetti deebii nan kenna.
-
-🌹 Galatoomaa
+⏳ Obsaan eegaa, deebii nan kenna.
 """
 
-    # Reply to user
+    # reply to user (acts like YOU speaking)
     await update.message.reply_text(luxury_reply)
 
-    # ================= SEND TO ADMIN =================
-
+    # send to your personal Telegram account
     admin_message = f"""
 📩 New Message
 
 👤 Name: {user.first_name}
-🆔 User ID: {user.id}
+🆔 ID: {user.id}
 📨 Username: @{user.username}
 
 ━━━━━━━━━━━━━━━
 
-📨 Message:
+💬 Message:
 {text}
 """
 
@@ -136,15 +142,10 @@ async def main():
 
     bot_app = Application.builder().token(TOKEN).build()
 
-    bot_app.add_handler(
-        CommandHandler("start", start)
-    )
+    bot_app.add_handler(CommandHandler("start", start))
 
     bot_app.add_handler(
-        MessageHandler(
-            filters.TEXT & ~filters.COMMAND,
-            handle_message
-        )
+        MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message)
     )
 
     print("Bot started successfully...")
@@ -161,5 +162,4 @@ async def main():
 if __name__ == "__main__":
 
     threading.Thread(target=run_web).start()
-
     asyncio.run(main())
