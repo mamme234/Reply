@@ -1,4 +1,5 @@
 import os
+import asyncio
 from dotenv import load_dotenv
 from flask import Flask, request
 
@@ -19,16 +20,15 @@ PORT = int(os.getenv("PORT", 10000))
 
 app = Flask(__name__)
 
-# Telegram bot application
 bot_app = Application.builder().token(TOKEN).build()
 
 
-# ---------------- HANDLERS ---------------- #
-
+# START COMMAND
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("🤖 Webhook Bot is running!")
+    await update.message.reply_text("🤖 Bot is running with webhook!")
 
 
+# ECHO MESSAGE
 async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.message and update.message.text:
         await update.message.reply_text(f"📩 {update.message.text}")
@@ -38,33 +38,30 @@ bot_app.add_handler(CommandHandler("start", start))
 bot_app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
 
 
-# ---------------- WEBHOOK ROUTE ---------------- #
-
-@app.post("/")
+# WEBHOOK ROUTE
+@app.post(f"/{TOKEN}")
 async def webhook():
     data = request.get_json(force=True)
 
     update = Update.de_json(data, bot_app.bot)
+
     await bot_app.process_update(update)
 
-    return "OK"
+    return "OK", 200
 
 
-# ---------------- SET WEBHOOK ON START ---------------- #
+async def setup():
+    await bot_app.initialize()
+    await bot_app.start()
 
-async def on_startup():
-    if WEBHOOK_URL:
-        await bot_app.bot.set_webhook(url=WEBHOOK_URL)
-        print(f"✅ Webhook set to {WEBHOOK_URL}")
+    webhook_url = f"{WEBHOOK_URL}/{TOKEN}"
 
+    await bot_app.bot.set_webhook(webhook_url)
 
-# ---------------- RUN SERVER ---------------- #
+    print(f"✅ Webhook set: {webhook_url}")
+
 
 if __name__ == "__main__":
-    import asyncio
+    asyncio.run(setup())
 
-    async def main():
-        await on_startup()
-        app.run(host="0.0.0.0", port=PORT)
-
-    asyncio.run(main())
+    app.run(host="0.0.0.0", port=PORT)
