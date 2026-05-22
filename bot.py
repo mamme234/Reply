@@ -1,4 +1,5 @@
 import os
+import threading
 from flask import Flask
 from telegram import Update
 from telegram.ext import (
@@ -12,8 +13,11 @@ from telegram.ext import (
 # ================= CONFIG =================
 
 TOKEN = os.getenv("BOT_TOKEN")
+
+# Your Telegram ID
 ADMIN_ID = 7154361039
 
+# Bot status
 STATUS = "offline"
 
 # ================= FLASK =================
@@ -24,77 +28,136 @@ app = Flask(__name__)
 def home():
     return "Bot is running successfully!"
 
-# ================= LUXURY MESSAGE =================
+def run_web():
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
+
+# ================= FULL AUTO REPLY =================
 
 full_text = """
-✨ ꧁ɪ ᴀᴍ Tᕼᗴ KIᑎᘜ꧂ ✨
-
 🇬🇧 English:
 I am currently unavailable due to private business commitments.
 Kindly note that I may not respond immediately.
-For urgent matters, Call me: +251934600018
-
-━━━━━━━━━━━━━━━
-
-🇪🇹 Amharic:
-እኔ አሁን በግል ስራ ላይ ነኝ።
-አስቸኳይ ከሆነ ይደውሉ: +251934600018
+For urgent matters, please contact me directly at +251934600018.
+Thank you for your patience and understanding.
 
 ━━━━━━━━━━━━━━━
 
 🟡 Afaan Oromo:
-Ani hojii dhuunfaa irratti jira.
-Call me: +251934600018
+Ani yeroo ammaa hojii dhuunfaa koo irratti waanan hojjetaa jiruuf argamuu hin danda’u.
+Dhimmi ariifachiisaa yoo jiraate, bilbila naaf godhaa: +251934600018.
+Galatoomaa obsa fi hubannoo keessaniif.
+
+━━━━━━━━━━━━━━━
+
+🇪🇹 Amharic:
+እኔ አሁን በግል ስራ ላይ በመሆኔ ለመገኘት አልችልም።
+አስቸኳይ ከሆነ ይደውሉ: +251934600018
+እናመሰግናለን።
 """
 
-online_text = "🟢 I’m online now. Send your message 🤍"
+# ================= SHORT ONLINE MESSAGE =================
 
-# ================= HANDLERS =================
+short_text = """
+🇬🇧 I'm currently online. Send your message.
+
+🟡 Ani amma online irra jira. Ergaa keessan ergaa.
+
+🇪🇹 አሁን መስመር ላይ ነኝ። መልእክትዎን ይላኩ።
+"""
+
+# ================= START COMMAND =================
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("✨ Welcome! Send me a message 🤍")
 
-async def go_online(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    global STATUS
-    if update.effective_user.id == ADMIN_ID:
-        STATUS = "online"
-        await update.message.reply_text("🟢 ONLINE MODE")
+    welcome_message = """
+✨ Welcome ✨
 
-async def go_offline(update: Update, context: ContextTypes.DEFAULT_TYPE):
+Send your message here 🤍
+
+━━━━━━━━━━━━━━━
+
+✨ እንኳን ደህና መጡ ✨
+
+መልእክትዎን ይላኩ።
+
+━━━━━━━━━━━━━━━
+
+✨ Baga nagaan dhuftan ✨
+
+Ergaa keessan ergaa 🤍
+"""
+
+    await update.message.reply_text(welcome_message)
+
+# ================= ONLINE COMMAND =================
+
+async def online(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
     global STATUS
-    if update.effective_user.id == ADMIN_ID:
-        STATUS = "offline"
-        await update.message.reply_text("🔴 OFFLINE MODE")
+
+    if update.effective_user.id != ADMIN_ID:
+        return
+
+    STATUS = "online"
+
+    await update.message.reply_text("🟢 ONLINE MODE ENABLED")
+
+# ================= OFFLINE COMMAND =================
+
+async def offline(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    global STATUS
+
+    if update.effective_user.id != ADMIN_ID:
+        return
+
+    STATUS = "offline"
+
+    await update.message.reply_text("🔴 OFFLINE MODE ENABLED")
+
+# ================= MESSAGE HANDLER =================
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
-    user = update.effective_user
-    text = update.message.text
+    if not update.message:
+        return
 
-    # 👤 send to admin inbox
+    user = update.effective_user
+    text = update.message.text or ""
+
+    # ================= SEND MESSAGE TO ADMIN =================
+
+    admin_message = f"""
+📩 New Message
+
+👤 Name: {user.first_name}
+🆔 ID: {user.id}
+📨 Username: @{user.username}
+
+━━━━━━━━━━━━━━━
+
+💬 Message:
+{text}
+"""
+
     await context.bot.send_message(
         chat_id=ADMIN_ID,
-        text=f"""
-📩 NEW MESSAGE
-
-👤 {user.first_name}
-🆔 {user.id}
-
-💬 {text}
-"""
+        text=admin_message
     )
 
-    # 🤖 reply logic
-    if STATUS == "online":
-        await update.message.reply_text(online_text)
-    else:
-        await update.message.reply_text(full_text)
+    # ================= AUTO REPLY =================
 
-# ================= FLASK THREAD =================
+    try:
 
-def run_flask():
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+        if STATUS == "online":
+            await update.message.reply_text(short_text)
+
+        else:
+            await update.message.reply_text(full_text)
+
+    except Exception as e:
+        print("Reply Error:", e)
 
 # ================= MAIN =================
 
@@ -103,20 +166,21 @@ def main():
     application = Application.builder().token(TOKEN).build()
 
     application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("online", go_online))
-    application.add_handler(CommandHandler("offline", go_offline))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    application.add_handler(CommandHandler("online", online))
+    application.add_handler(CommandHandler("offline", offline))
+
+    application.add_handler(
+        MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message)
+    )
 
     print("🤖 Bot started successfully...")
 
-    # ✅ SAFE FOR RENDER
     application.run_polling(drop_pending_updates=True)
 
 # ================= RUN =================
 
 if __name__ == "__main__":
 
-    import threading
-    threading.Thread(target=run_flask).start()
+    threading.Thread(target=run_web).start()
 
     main()
